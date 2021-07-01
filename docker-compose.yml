@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+    glpi-db:
+        image: mysql:5.7.22
+        container_name: glpi-db
+        hostname: mysql
+        command: mysqld --default_authentication_plugin=mysql_native_password
+        volumes:
+                - ./db_data:/var/lib/mysql
+        restart: always
+        env_file:
+                - .env
+        environment:
+                TZ: $TZ
+                MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+                MYSQL_USER: $MYSQL_USER
+                MYSQL_PASSWORD: $MYSQL_PASSWORD
+                MYSQL_DATABASE: $MYSQL_DATABASE
+        ports:
+                - "3309:3306"
+        networks:
+                - glpi-network
+    glpi-app:
+            image: glpi:2.0                                      
+            container_name: glpi-app
+            hostname: glpi
+            ports:                    
+                    - 8085:443
+                    - 10444:80           
+            volumes:                    
+                    - /etc/timezone:/etc/timezone:ro
+                    - /etc/localtime:/etc/localtime:ro                                          
+                    - ./app:/var/www/html/glpi
+            restart: always
+            env_file:
+                    - .env
+            environment:
+                TIMEZONE: $TZ                     
+            depends_on:
+                    - glpi-db
+            networks:
+                    - glpi-network
+networks:
+    glpi-network:
+      driver: bridge
